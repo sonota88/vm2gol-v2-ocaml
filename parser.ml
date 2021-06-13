@@ -18,7 +18,7 @@ let read_tokens (): token list =
           StrNode value
         ] ->
          { lineno; kind; value } :: iter_read_tokens ()
-      | _ -> raise (Panic2 "21")
+      | _ -> raise (Panic "21")
     with
       End_of_file -> []
   in
@@ -26,17 +26,17 @@ let read_tokens (): token list =
 
 let consume tokens pos value =
   match tokens with
-  | [] -> raise (Panic2 "29")
+  | [] -> raise (Panic "29")
   | hd :: tl -> (
     if hd.value = value then
       (tl, pos + 1)
     else
-      raise (Panic2 (Printf.sprintf "34: expected(%s) actual(%s)" value hd.value))
+      raise (Panic (Printf.sprintf "34: expected(%s) actual(%s)" value hd.value))
   )
 
 let get_value ts pos =
   match ts with
-  | [] -> raise (Panic2 "29")
+  | [] -> raise (Panic "29")
   | hd :: tl -> (
     (* pkv_i "pos 50" pos;
      * pkv_i "pos 50b" (List.length ts); *)
@@ -70,7 +70,7 @@ let parse_args ts pos: (token list * int * t_node list) =
                let (ts, pos, s) = get_value ts pos in
                (ts, pos, StrNode s)
              )
-          | _ -> raise (Panic2 "61")
+          | _ -> raise (Panic "61")
         )
       in
       if (List.hd ts).value = "," then
@@ -86,7 +86,7 @@ let parse_args ts pos: (token list * int * t_node list) =
 
 let rec _parse_expr_right ts pos =
   match (List.hd ts).value with
-  | "+" ->
+  | "+" | "==" ->
      (
        let (ts, pos, op_str) = get_value ts pos in
        let (ts, pos, expr_r) = parse_expr ts pos in
@@ -95,15 +95,29 @@ let rec _parse_expr_right ts pos =
   | _ -> None
 
 and parse_expr ts pos: (token list * int * t_node) =
-  let expr_l = (
+  let (ts, pos, expr_l) = (
       let t = List.hd ts in
       match t.kind with
-      | "int" -> IntNode (int_of_string t.value)
-      | "ident" -> StrNode t.value
-      | _ -> raise (Panic2 "103 TODO")
+      | "int" ->
+         let (ts, pos) = skip ts pos in
+         (
+           ts, pos,
+           IntNode (int_of_string t.value)
+         )
+      | "ident" ->
+         let (ts, pos) = skip ts pos in
+         (
+           ts, pos,
+           StrNode t.value
+         )
+      | "sym" ->
+         let (ts, pos) = consume ts pos "(" in
+         let (ts, pos, expr) = parse_expr ts pos in
+         let (ts, pos) = consume ts pos ")" in
+         (ts, pos, expr)
+      | _ -> raise (Panic "103 TODO")
     )
   in
-  let (ts, pos) = skip ts pos in
 
   let op_r = _parse_expr_right ts pos in
   match op_r with
@@ -116,11 +130,10 @@ and parse_expr ts pos: (token list * int * t_node) =
            expr_r
          ]
      )
-    | None ->
-       (
-         (ts, pos, expr_l)
-       )
-
+  | None ->
+     (
+       (ts, pos, expr_l)
+     )
 
 let parse_set ts pos =
     let (ts, pos) = consume ts pos "set" in
@@ -163,8 +176,46 @@ let parse_call ts pos =
         )
     )
 
-(* call_set *)
-(* return *)
+let parse_call_set ts pos =
+    let (ts, pos) = consume ts pos "call_set" in
+    let (ts, pos, var_name) = get_value ts pos in
+    let (ts, pos) = consume ts pos "=" in
+    let (ts, pos, funcall) = parse_funcall ts pos in
+    let (ts, pos) = consume ts pos ";" in
+    (
+      ts,
+      pos,
+      ListNode (
+          StrNode "call_set"
+          :: StrNode var_name
+          :: [ListNode funcall]
+        )
+    )
+
+let parse_return ts pos =
+  let (ts, pos) = consume ts pos "return" in
+
+  if (List.hd ts).value = ";" then
+    let (ts, pos) = consume ts pos ";" in
+    (
+      ts, pos,
+      ListNode [
+        StrNode "return";
+      ]
+    )
+  else
+    (
+      let (ts, pos, expr) = parse_expr ts pos in
+      let (ts, pos) = consume ts pos ";" in
+      (
+        ts, pos,
+        ListNode [
+          StrNode "return";
+          expr
+        ]
+      )
+    )
+
 (* while *)
 (* case *)
 
@@ -188,22 +239,20 @@ let parse_vm_comment ts pos =
 
 let parse_var tokens pos: (token list * int * t_node) =
   let (ts, pos) = consume tokens pos "var" in
-  let (ts, pos) = skip ts pos in (* a *)
+  (* let (ts, pos) = skip ts pos in (\* a *\) *)
+  let (ts, pos, var_name) = get_value ts pos in
 
   if (List.hd ts).value = "=" then
     (
       let (ts, pos) = consume ts pos "=" in
-
-      let expr = IntNode (int_of_string (List.hd ts).value) in
-      let (ts, pos) = skip ts pos in
-
+      let (ts, pos, expr) = parse_expr ts pos in
       let (ts, pos) = consume ts pos ";" in
       (
         ts,
         pos,
         ListNode [
             StrNode "var";
-            StrNode "a";
+            StrNode var_name;
             expr
           ]
       )
@@ -216,7 +265,7 @@ let parse_var tokens pos: (token list * int * t_node) =
         pos,
         ListNode [
             StrNode "var";
-            StrNode "a"
+            StrNode var_name
           ]
       )
     )
@@ -227,14 +276,16 @@ let parse_stmt ts pos: (token list * int * t_node) =
   | "set" -> parse_set ts pos
   | "_cmt" -> parse_vm_comment ts pos
   | "call" -> parse_call ts pos
-  | _ -> raise (Panic2 (Printf.sprintf "135 %s" (List.hd ts).value))
+  | "return" -> parse_return ts pos
+  | "call_set" -> parse_call_set ts pos
+  | _ -> raise (Panic (Printf.sprintf "135 %s" (List.hd ts).value))
 
 let parse_stmts ts pos =
   (* pkv_i "-->> parse_stmts" 0; *)
   let rec iter_parse_stmts ts pos =
     match (List.hd ts).value with
     | "set" -> (ts, pos, [])
-    | _ -> raise (Panic2 "61")
+    | _ -> raise (Panic "61")
   in
   iter_parse_stmts ts pos
 
@@ -250,7 +301,7 @@ let parse_func_def_body ts pos: (token list * int * t_node) =
     else
       (* (
        *   pkv_i "-->> 80" 0;
-       *   raise (Panic2 "85")
+       *   raise (Panic "85")
        * ) *)
       let (ts, pos, stmt) = (parse_stmt ts pos) in
       let (ts2, pos2, tail) = iter ts pos in
@@ -302,7 +353,7 @@ let parse_top_stmt (tokens : token list) pos: t_node list =
            let (ts, fn_def) = parse_func_def ts pos in
            (ListNode fn_def) :: (iter ts)
          )
-         | _ -> raise (Panic2 "225")
+         | _ -> raise (Panic "225")
        )
   in
   iter tokens

@@ -21,6 +21,7 @@ let rec print_tokens ts =
 
 let ident_char_p c =
   ('a' <= c && c <= 'z')
+  || ('0' <= c && c <= '9')
   || c = '_'
 
 let match_ident tail =
@@ -38,10 +39,12 @@ let match_str str : int =
   if str.[0] = '"' then
     (String.index_from str 1 '"') - 1
   else
-    raise Panic
+    raise (Panic "42")
 
 let match_sym tail =
-  if
+  if tail.[0] = '=' && tail.[1] = '=' then
+    2
+  else if
     tail.[0] = '('
     || tail.[0] = ')'
     || tail.[0] = '{'
@@ -68,6 +71,8 @@ let kw_p s =
   || s = "set"
   || s = "_cmt"
   || s = "call"
+  || s = "return"
+  || s = "call_set"
 
 let ident_to_kind ident_str =
   if kw_p ident_str then
@@ -129,7 +134,7 @@ let lex src: token list =
       | _ -> (
         prerr_string (Printf.sprintf "pos (%d) " pos);
         prerr_string (Printf.sprintf "tail >>%s<<" tail);
-        raise Panic
+        raise (Panic "135")
       )
     )
     (* [(1, "kw", "func")] *)

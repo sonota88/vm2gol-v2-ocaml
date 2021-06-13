@@ -1,10 +1,6 @@
 open Utils
 open Types
 
-(* 型名は小文字ではじまること *)
-(* type t_node = int
- * ;; *)
-
 let print_indent lv =
   let rec iter_print_indent lv =
     match lv with
@@ -70,24 +66,17 @@ let rec parse_list (tail : string) (pos : int) : (t_node list * int) =
 
   (* TODO lineno *)
   let rec iter_parse_list tail pos: (t_node list * int) =
-    (* prerr_string "-->> iter_parse_list: ";
-     * prerr_int pos;
-     * prerr_string (" >>" ^ tail ^ "\n"); *)
     if (String.length tail) = 0 then (
-      raise Panic
+      raise (Panic "77")
     ) else (
       match tail.[0] with
       | ']' -> (
-        (* prerr_string ("  -->> end list\n"); *)
         ([], pos + 1)
       )
       | '[' -> (
-        (* prerr_string ("  -->> 113\n"); *)
         let (xs, size) = parse_list tail pos in
-        (* prerr_string (Printf.sprintf "  -->> 114 size(%d)\n" size); *)
         (
           let (xs2, pos2) = iter_parse_list (substr tail size) (pos + size) in
-          (* prerr_string ("  -->> 117 \n"); *)
           ((ListNode xs) :: xs2, pos2)
         )
 
@@ -96,13 +85,7 @@ let rec parse_list (tail : string) (pos : int) : (t_node list * int) =
       | ' ' | ',' -> iter_parse_list (substr tail 1) (pos + 1)
       | _ when 0 < match_int tail -> (
         let size = match_int tail in
-        (* prerr_string "size: ";
-         * prerr_int size;
-         * prerr_string "\n"; *)
         let temp_str = str_head tail size in
-        (* prerr_string "temp_str: ";
-         * prerr_string temp_str;
-         * prerr_string "\n"; *)
         let (xs2, pos2) = iter_parse_list (substr tail size) (pos + size) in
         ((IntNode (int_of_string temp_str)) :: xs2, pos2)
       )
@@ -116,12 +99,11 @@ let rec parse_list (tail : string) (pos : int) : (t_node list * int) =
       )
       | _ -> (
         prerr_string ("tail >>" ^ tail ^ "<<\n");
-        raise Panic
+        raise (Panic "119")
       )
     )
   in
   let (xs, pos2) = iter_parse_list (substr tail 1) (pos + 1) in
-  (* prerr_string (Printf.sprintf "pos: %d .. %d\n" pos pos2); *)
   (xs, (pos2 - pos))
 
 let parse (json : string): t_node list =
