@@ -1,3 +1,6 @@
+OCamlでかんたんな自作言語のコンパイラを書いた  
+https://memo88.hatenablog.com/entry/20210626_vm2gol_v2_ocaml
+
 ```
 $ ./docker_run.sh ocaml --version
 4.05.0
