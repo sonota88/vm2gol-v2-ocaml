@@ -7,6 +7,9 @@ https://memo88.hatenablog.com/entry/20210626_vm2gol_v2_ocaml
 ```
 
 ```sh
+git clone --recursive https://github.com/sonota88/vm2gol-v2-ocaml.git
+cd vm2gol-v2-ocaml
+
 ./docker.sh build
 ./test.sh all
 ```
