@@ -75,29 +75,30 @@ let rec _parse_expr_right ts =
      Some(ts, op_str, expr_r)
   | _ -> None
 
+and _parse_expr_factor ts: (token list * t_node) =
+  let t = List.hd ts in
+  match t.kind with
+  | "sym" ->
+     let ts = consume ts "(" in
+     let (ts, expr) = parse_expr ts in
+     let ts = consume ts ")" in
+     (ts, expr)
+  | "int" ->
+     let ts = skip ts in
+     (
+       ts,
+       IntNode(int_of_string t.value)
+     )
+  | "ident" ->
+     let ts = skip ts in
+     (
+       ts,
+       StrNode(t.value)
+     )
+  | _ -> failwith "unexpected token kind"
+
 and parse_expr ts: (token list * t_node) =
-  let (ts, expr_l) = (
-      let t = List.hd ts in
-      match t.kind with
-      | "int" ->
-         let ts = skip ts in
-         (
-           ts,
-           IntNode(int_of_string t.value)
-         )
-      | "ident" ->
-         let ts = skip ts in
-         (
-           ts,
-           StrNode(t.value)
-         )
-      | "sym" ->
-         let ts = consume ts "(" in
-         let (ts, expr) = parse_expr ts in
-         let ts = consume ts ")" in
-         (ts, expr)
-      | _ -> failwith "unexpected token kind"
-    )
+  let (ts, expr_l) = _parse_expr_factor ts
   in
 
   let op_r = _parse_expr_right ts in
