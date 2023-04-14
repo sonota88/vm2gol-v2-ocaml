@@ -19,3 +19,6 @@ USER ${USER}
 RUN mkdir /home/${USER}/work
 
 WORKDIR /home/${USER}/work
+
+ENV IN_CONTAINER=1
+ENV USER=${USER}

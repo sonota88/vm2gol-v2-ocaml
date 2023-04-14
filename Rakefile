@@ -28,7 +28,6 @@ dep_map.each do |goal, src_files|
         .join(" ")
 
     cmd = [
-      %( ./docker.sh run ),
       %( ocamlopt -I z_tmp -o "#{exe_file}" "str.cmxa" ),
       tmp_src_files
     ].join(" ")
