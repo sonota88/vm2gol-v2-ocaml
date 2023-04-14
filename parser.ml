@@ -98,7 +98,7 @@ and _parse_expr_factor ts: (token list * t_node) =
   | _ -> failwith "unexpected token kind"
 
 and parse_expr ts: (token list * t_node) =
-  let (ts, expr_l) = _parse_expr_factor ts
+  let (ts, factor) = _parse_expr_factor ts
   in
 
   let op_r = _parse_expr_right ts in
@@ -108,11 +108,11 @@ and parse_expr ts: (token list * t_node) =
        ts,
        ListNode([
              StrNode(op_str);
-             expr_l;
+             factor;
              expr_r
          ])
      )
-  | None -> (ts, expr_l)
+  | None -> (ts, factor)
 
 let parse_set ts =
   let ts = consume ts "set" in
