@@ -128,9 +128,9 @@ test_json_nn() {
 
   echo "case ${nn}"
 
-  local input_file="${TEST_DIR}/json/${nn}.json"
+  local input_file="${TEST_COMMON_DIR}/json/${nn}.json"
   local temp_json_file="${TEMP_DIR}/test.json"
-  local exp_file="${TEST_DIR}/json/${nn}.json"
+  local exp_file="${TEST_COMMON_DIR}/json/${nn}.json"
 
   run_test_json $input_file > $temp_json_file
   if [ $? -ne 0 ]; then
