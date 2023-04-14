@@ -2,7 +2,7 @@
 
 set -o nounset
 
-readonly IMAGE=vm2gol-v2:ocaml
+readonly IMAGE=mini-ruccola-ocaml:1
 
 build() {
   docker build \
