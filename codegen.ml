@@ -299,7 +299,7 @@ and gen_stmts env (stmts : t_list) =
   iter env stmts
 
 let gen_var env (stmt : t_list) : t_env =
-  print_string "  sub_sp 1\n";
+  print_string "  add_sp -1\n";
   match stmt with
   | [ StrNode("var"); StrNode(lvar_name); expr ] ->
      _gen_set env lvar_name expr
