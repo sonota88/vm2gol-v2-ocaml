@@ -223,8 +223,9 @@ let rec parse_while ts =
 
 and parse_case ts =
   let rec parse_when_clauses ts: (token list * t_list) =
-    if (List.hd ts).value = "(" then
+    if (List.hd ts).value = "when" then
       (
+        let ts = consume ts "when" in
         let ts = consume ts "(" in
         let (ts, expr) = parse_expr ts in
         let ts = consume ts ")" in
@@ -245,9 +246,7 @@ and parse_case ts =
   in
 
   let ts = consume ts "case" in
-  let ts = consume ts "{" in
   let (ts, when_clauses) : (token list * t_list) = parse_when_clauses ts in
-  let ts = consume ts "}" in
   (
     ts,
     ListNode(StrNode("case") :: when_clauses)
