@@ -67,6 +67,11 @@ let parse_args ts: (token list * t_list) =
   in
   iter ts
 
+let binop_p ts =
+  match (List.hd ts).value with
+  | "+" | "*" | "==" | "!=" -> true
+  | _ -> false
+
 let rec _parse_expr_right ts =
   match (List.hd ts).value with
   | "+" | "*" | "==" | "!=" ->
@@ -98,21 +103,24 @@ and _parse_expr_factor ts: (token list * t_node) =
   | _ -> failwith "unexpected token kind"
 
 and parse_expr ts: (token list * t_node) =
-  let (ts, factor) = _parse_expr_factor ts
+  let rec iter ts lhs =
+    if binop_p ts
+    then
+      let (ts, op_str) = get_value ts in
+      let (ts, rhs) = _parse_expr_factor ts in
+      let new_lhs =
+        ListNode([
+              StrNode(op_str);
+              lhs;
+              rhs
+          ])
+      in
+        iter ts new_lhs
+    else
+      (ts, lhs)
   in
-
-  let op_r = _parse_expr_right ts in
-  match op_r with
-  | Some (ts, op_str, expr_r) ->
-     (
-       ts,
-       ListNode([
-             StrNode(op_str);
-             factor;
-             expr_r
-         ])
-     )
-  | None -> (ts, factor)
+    let (ts, factor) = _parse_expr_factor ts in
+    iter ts factor
 
 let parse_set ts =
   let ts = consume ts "set" in
