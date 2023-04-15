@@ -207,17 +207,14 @@ let rec gen_while env stmt =
 
        let label_begin = Printf.sprintf "while_%d" label_id in
        let label_end = Printf.sprintf "end_while_%d" label_id in
-       let label_true = Printf.sprintf "true_%d" label_id in
 
        print_string (Printf.sprintf "label %s\n" label_begin);
 
        let env = gen_expr env expr in
 
-       print_string "  cp 1 reg_b\n";
+       print_string "  cp 0 reg_b\n";
        print_string "  compare\n";
-       print_string (Printf.sprintf "  jump_eq %s\n" label_true);
-       print_string (Printf.sprintf "  jump %s\n" label_end);
-       print_string (Printf.sprintf "label %s\n" label_true);
+       print_string (Printf.sprintf "  jump_eq %s\n" label_end);
 
        let env = gen_stmts env stmts in
 
