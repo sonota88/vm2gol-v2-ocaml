@@ -235,17 +235,13 @@ and gen_case env stmt =
          | expr :: ListNode(stmts) :: [] ->
             (
               let label_end_case = Printf.sprintf "end_case_%d" case_id in
-              let label_when = Printf.sprintf "when_%d_%d" case_id when_id in
               let label_end_when = Printf.sprintf "end_when_%d_%d" case_id when_id in
 
               let env = gen_expr env expr in
 
-              print_string "  cp 1 reg_b\n";
+              print_string "  cp 0 reg_b\n";
               print_string "  compare\n";
-              print_string (Printf.sprintf "  jump_eq %s\n" label_when);
-              print_string (Printf.sprintf "  jump %s\n" label_end_when);
-
-              print_string (Printf.sprintf "label %s\n" label_when);
+              print_string (Printf.sprintf "  jump_eq %s\n" label_end_when);
 
               let env = gen_stmts env stmts in
 
