@@ -72,15 +72,7 @@ let binop_p ts =
   | "+" | "*" | "==" | "!=" -> true
   | _ -> false
 
-let rec _parse_expr_right ts =
-  match (List.hd ts).value with
-  | "+" | "*" | "==" | "!=" ->
-     let (ts, op_str) = get_value ts in
-     let (ts, expr_r) = parse_expr ts in
-     Some(ts, op_str, expr_r)
-  | _ -> None
-
-and _parse_expr_factor ts: (token list * t_node) =
+let rec _parse_expr_factor ts: (token list * t_node) =
   let t = List.hd ts in
   match t.kind with
   | "sym" ->
